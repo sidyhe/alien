@@ -398,10 +398,16 @@ static int alien_load(lua_State *L) {
     return luaL_error(L, "alien: out of memory");
   strcpy(name, libname);
   al = (alien_Library *)lua_newuserdata(L, sizeof(alien_Library));
-  if(!al) return luaL_error(L, "alien: out of memory");
+  if(!al) {
+    LALLOC_FREE_STRING(lalloc, aud, name);
+    return luaL_error(L, "alien: out of memory");
+  }
   lib = alien_openlib(L, libname);
-  if(!lib)
+  if(!lib) {
+    lua_remove(L, -2); // userdata
+    LALLOC_FREE_STRING(lalloc, aud, name);
     return lua_error(L);
+  }
   lua_newtable(L);
   lua_setuservalue(L, -2);
   luaL_getmetatable(L, ALIEN_LIBRARY_META);
